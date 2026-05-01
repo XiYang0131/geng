@@ -1,3 +1,20 @@
 {
-  "version": 2
+  "version": 2,
+  "builds": [
+    { "src": "api/*.js", "use": "@vercel/node" },
+    { "src": "index.html", "use": "@vercel/static" },
+    { "src": "client.js", "use": "@vercel/static" },
+    { "src": "styles.css", "use": "@vercel/static" },
+    { "src": "robots.txt", "use": "@vercel/static" },
+    { "src": "sitemap.xml", "use": "@vercel/static" }
+  ],
+  "routes": [
+    { "src": "/api/explain", "dest": "/api/explain.js" },
+    { "src": "/api/health", "dest": "/api/health.js" },
+    { "src": "/client.js", "dest": "/client.js" },
+    { "src": "/styles.css", "dest": "/styles.css" },
+    { "src": "/robots.txt", "dest": "/robots.txt" },
+    { "src": "/sitemap.xml", "dest": "/sitemap.xml" },
+    { "src": "/(.*)", "dest": "/index.html" }
+  ]
 }
