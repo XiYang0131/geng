@@ -12,6 +12,8 @@
     { "src": "/api/explain", "dest": "/api/explain.js" },
     { "src": "/api/health", "dest": "/api/health.js" },
     { "src": "/api/terms", "dest": "/api/terms.js" },
+    { "src": "/api/trending", "dest": "/api/trending.js" },
+    { "src": "/api/trending-refresh", "dest": "/api/trending-refresh.js" },
     { "src": "/client.js", "dest": "/client.js" },
     { "src": "/styles.css", "dest": "/styles.css" },
     { "src": "/robots.txt", "dest": "/robots.txt" },

@@ -208,6 +208,19 @@ button {
   padding: 18px;
 }
 
+.trendCard {
+  width: 100%;
+  text-align: left;
+}
+
+.rank {
+  display: inline-flex;
+  margin-bottom: 8px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 800;
+}
+
 .card h3,
 .result h2,
 .panel h2,

@@ -82,8 +82,19 @@ DEEPSEEK_BASE_URL=https://api.deepseek.com
 DEEPSEEK_MODEL=deepseek-v4-flash
 SUPABASE_URL=https://your-project.supabase.co
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+TRENDING_REFRESH_SECRET=your_refresh_secret
 ```
 
 6. 点击 Deploy。
 
 如果不配置 Supabase，线上仍然可以调用 DeepSeek，但缓存只会保存在函数内存里，不适合长期存储所有用户查询结果。
+
+## 刷新热门候选
+
+配置 `SUPABASE_URL`、`SUPABASE_SERVICE_ROLE_KEY`、`DEEPSEEK_API_KEY` 后，可以手动访问：
+
+```text
+https://your-domain.vercel.app/api/trending-refresh?secret=your_refresh_secret
+```
+
+它会读取外部热榜，使用 DeepSeek 筛出像梗词的候选，并写入 Supabase 的 `meme_trending_terms` 表。首页会在“正在流行”里展示这些候选。
