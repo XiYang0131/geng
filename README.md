@@ -32,8 +32,29 @@ npm start
 http://127.0.0.1:8788
 ```
 
-## 部署说明
+## Vercel 部署
 
-当前版本可以作为 Node 服务部署。`data/db.json` 是本地开发缓存，不建议提交到 GitHub，也不适合作为 Vercel 的长期数据库。
+这个仓库已经包含 Vercel Functions：
 
-如果要部署到 Vercel，建议下一步把 `/api/explain` 拆成 Vercel Functions，并把缓存迁移到 Supabase。
+```text
+api/explain.js
+api/health.js
+```
+
+部署步骤：
+
+1. 在 Vercel 导入 GitHub 仓库。
+2. Framework Preset 选择 `Other`。
+3. Build Command 留空。
+4. Output Directory 留空。
+5. 添加环境变量：
+
+```env
+DEEPSEEK_API_KEY=your_deepseek_api_key_here
+DEEPSEEK_BASE_URL=https://api.deepseek.com
+DEEPSEEK_MODEL=deepseek-v4-flash
+```
+
+6. 点击 Deploy。
+
+注意：Vercel Functions 不适合用本地文件做长期数据库。当前线上版本会使用函数内存缓存，适合先试用；如果要长期保存所有用户查询结果，下一步建议接入 Supabase。
