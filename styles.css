@@ -222,6 +222,25 @@ button {
   color: var(--muted);
 }
 
+.cardMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.miniTag {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 3px 8px;
+  background: #f7faf7;
+  color: var(--muted);
+  font-size: 13px;
+}
+
 .meta {
   display: flex;
   flex-wrap: wrap;

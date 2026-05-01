@@ -260,6 +260,24 @@ function setCachedTerm(query, term) {
   localStorage.setItem(cacheKey, JSON.stringify(cache));
 }
 
+function sortTermsForList(terms) {
+  return [...terms].sort(
+    (a, b) =>
+      Number(b.queryCount || 0) - Number(a.queryCount || 0) ||
+      new Date(b.lastQueriedAt || 0) - new Date(a.lastQueriedAt || 0)
+  );
+}
+
+function termTags(term, max = 3) {
+  return Array.isArray(term.tags) ? term.tags.filter(Boolean).slice(0, max) : [];
+}
+
+function cardMeta(term) {
+  const tags = termTags(term, 3).map((tag) => `<span class="miniTag">${escapeHtml(tag)}</span>`).join("");
+  const heat = term.queryCount ? `<span class="miniTag">查询 ${Number(term.queryCount)}</span>` : "";
+  return tags || heat ? `<div class="cardMeta">${tags}${heat}</div>` : "";
+}
+
 async function loadCloudTerms(category = "", limit = 24) {
   const params = new URLSearchParams({ limit: String(limit) });
   if (category) {
@@ -299,6 +317,7 @@ function normalizeTerm(term, temporary) {
     slug: term.slug || slugify(term.term || "未知梗词"),
     temporary,
     aliases: Array.isArray(term.aliases) ? term.aliases : [],
+    tags: Array.isArray(term.tags) ? term.tags : [],
     usage_scenarios: Array.isArray(term.usage_scenarios) ? term.usage_scenarios : [],
     avoid_scenarios: Array.isArray(term.avoid_scenarios) ? term.avoid_scenarios : [],
     examples: Array.isArray(term.examples) ? term.examples : [],
@@ -321,7 +340,7 @@ function setLoading(isLoading, label = "正在为你翻译...") {
 
 function renderHome(message = "", skipCloudRefresh = false) {
   const terms = loadTerms();
-  const hot = terms.slice(0, 8);
+  const hot = sortTermsForList(terms).slice(0, 10);
   app.innerHTML = `
     <section class="hero">
       <h1>互联网梗词翻译器</h1>
@@ -334,8 +353,8 @@ function renderHome(message = "", skipCloudRefresh = false) {
     </section>
     <section class="section">
       <div class="sectionHead">
-        <h2>热门梗词</h2>
-        <p>直接点开看解释</p>
+        <h2>大家在看</h2>
+        <p>按搜索热度和最近查询更新</p>
       </div>
       <div class="chips">
         ${hot.map((term) => `<a class="chip" href="#/terms/${term.slug}">${escapeHtml(term.term)}</a>`).join("")}
@@ -472,7 +491,10 @@ function renderTerm(term) {
             <div class="meta">
               ${term.temporary ? `<span class="tag">AI 临时解释</span>` : `<span class="tag">正式词条</span>`}
               ${category ? `<a class="tag" href="#/category/${category.id}">${escapeHtml(category.name)}</a>` : ""}
+              ${term.source === "shared-cache" ? `<span class="tag">用户查询</span>` : ""}
+              ${term.queryCount ? `<span class="tag">查询 ${Number(term.queryCount)}</span>` : ""}
               ${(term.aliases || []).map((alias) => `<span class="tag">${escapeHtml(alias)}</span>`).join("")}
+              ${termTags(term, 5).map((tag) => `<span class="tag">${escapeHtml(tag)}</span>`).join("")}
             </div>
           </div>
           <div class="actions">
@@ -571,7 +593,7 @@ async function copyText(text) {
 
 function renderCategory(id, skipCloudRefresh = false) {
   const category = categories.find((item) => item.id === id) || categories[0];
-  const terms = loadTerms().filter((term) => term.category === category.id);
+  const terms = sortTermsForList(loadTerms().filter((term) => term.category === category.id));
   document.title = `${category.name}梗大全 - 互联网梗词翻译器`;
   app.innerHTML = `
     <section class="section">
@@ -589,6 +611,7 @@ function renderCategory(id, skipCloudRefresh = false) {
               <a class="card" href="#/terms/${term.slug}">
                 <h3>${escapeHtml(term.term)}</h3>
                 <p>${escapeHtml(term.one_liner)}</p>
+                ${cardMeta(term)}
               </a>
             `
           )
