@@ -100,8 +100,7 @@ button {
 .layout,
 .hero,
 .section,
-.detail,
-.admin {
+.detail {
   width: min(1120px, calc(100% - 32px));
   margin: 0 auto;
 }
@@ -334,16 +333,6 @@ button {
   gap: 14px;
 }
 
-.admin {
-  padding: 28px 0 44px;
-}
-
-.adminGrid {
-  display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
-  gap: 16px;
-}
-
 .form {
   display: grid;
   gap: 10px;
@@ -372,27 +361,6 @@ button {
   resize: vertical;
 }
 
-.termList {
-  display: grid;
-  gap: 10px;
-}
-
-.termRow {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 12px;
-  align-items: center;
-  padding: 12px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fff;
-}
-
-.status {
-  color: var(--accent-2);
-  font-weight: 700;
-}
-
 .footer {
   padding: 28px 16px 36px;
   border-top: 1px solid var(--line);
@@ -406,8 +374,7 @@ button {
   }
 
   .searchBox,
-  .layout,
-  .adminGrid {
+  .layout {
     grid-template-columns: 1fr;
   }
 

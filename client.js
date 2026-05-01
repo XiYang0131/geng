@@ -652,7 +652,7 @@ function renderCategory(id, skipCloudRefresh = false) {
               </a>
             `
           )
-          .join("") || `<div class="card"><h3>暂无词条</h3><p>可以在后台新增这个分类的内容。</p></div>`}
+          .join("") || `<div class="card"><h3>暂无词条</h3><p>用户搜索并生成后，会自动沉淀到对应分类。</p></div>`}
       </div>
     </section>
     <section class="section">
@@ -671,143 +671,6 @@ function renderCategory(id, skipCloudRefresh = false) {
       })
       .catch(() => {});
   }
-}
-
-function renderAdmin() {
-  const terms = loadTerms();
-  const stats = getStats();
-  app.innerHTML = `
-    <section class="admin">
-      <div class="sectionHead">
-        <div>
-          <h1>后台管理</h1>
-          <p>admin / meme123</p>
-        </div>
-        <a class="ghost" href="#/">返回首页</a>
-      </div>
-      <div class="adminGrid">
-        <section class="panel" id="loginPanel">
-          <h2>管理员登录</h2>
-          <form class="form" id="loginForm">
-            <label>账号<input name="user" autocomplete="username" /></label>
-            <label>密码<input name="pass" type="password" autocomplete="current-password" /></label>
-            <button class="primary" type="submit">登录</button>
-          </form>
-        </section>
-        <section class="panel" id="adminPanel" hidden>
-          <h2>新增 / 编辑词条</h2>
-          <form class="form" id="termForm">
-            <label>梗词<input name="term" maxlength="50" required /></label>
-            <label>分类
-              <select name="category">${categories.map((item) => `<option value="${item.id}">${item.name}</option>`).join("")}</select>
-            </label>
-            <label>一句话解释<textarea name="one_liner" required></textarea></label>
-            <label>详细解释<textarea name="detailed_explanation" required></textarea></label>
-            <label>语气判断<input name="tone" required /></label>
-            <button class="primary" type="submit">保存并发布</button>
-            <button class="ghost" type="button" id="draftButton">AI 生成初稿</button>
-          </form>
-        </section>
-      </div>
-      <section class="section">
-        <div class="sectionHead">
-          <h2>词条列表</h2>
-          <p>${terms.length} 个词条</p>
-        </div>
-        <div class="termList">
-          ${terms
-            .map(
-              (term) => `
-                <div class="termRow">
-                  <div>
-                    <strong>${escapeHtml(term.term)}</strong>
-                    <p>${escapeHtml(term.one_liner)}</p>
-                  </div>
-                  <a class="tiny" href="#/terms/${term.slug}">查看</a>
-                </div>
-              `
-            )
-            .join("")}
-        </div>
-      </section>
-      <section class="section">
-        <div class="sectionHead">
-          <h2>基础统计</h2>
-          <p>匿名本地统计</p>
-        </div>
-        <div class="grid">
-          ${Object.entries(stats)
-            .sort((a, b) => (b[1].count || 0) - (a[1].count || 0))
-            .slice(0, 6)
-            .map(
-              ([name, item]) => `
-                <div class="card">
-                  <h3>${escapeHtml(name)}</h3>
-                  <p>查询 ${item.count || 0} 次，点赞 ${item.likes || 0}，点踩 ${item.dislikes || 0}，复制 ${item.copies || 0}</p>
-                </div>
-              `
-            )
-            .join("") || `<div class="card"><h3>暂无统计</h3><p>查询后会出现数据。</p></div>`}
-        </div>
-      </section>
-    </section>
-  `;
-
-  const loginForm = document.querySelector("#loginForm");
-  const adminPanel = document.querySelector("#adminPanel");
-  loginForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const data = new FormData(loginForm);
-    if (data.get("user") === "admin" && data.get("pass") === "meme123") {
-      adminPanel.hidden = false;
-      document.querySelector("#loginPanel").innerHTML = `<h2>已登录</h2><p class="status">可以维护正式词条。</p>`;
-    } else {
-      alert("账号或密码不正确。");
-    }
-  });
-
-  document.querySelector("#draftButton").addEventListener("click", async () => {
-    const form = document.querySelector("#termForm");
-    const name = form.term.value.trim();
-    if (!name) {
-      alert("请先输入梗词。");
-      return;
-    }
-    const button = document.querySelector("#draftButton");
-    button.disabled = true;
-    button.textContent = "AI 生成中...";
-    try {
-      const draft = await requestAiTerm(name);
-      form.category.value = draft.category || "hot";
-      form.one_liner.value = draft.one_liner;
-      form.detailed_explanation.value = draft.detailed_explanation;
-      form.tone.value = draft.tone;
-    } catch (error) {
-      alert(error.message || "AI 生成失败，请稍后重试。");
-    } finally {
-      button.disabled = false;
-      button.textContent = "AI 生成初稿";
-    }
-  });
-
-  document.querySelector("#termForm").addEventListener("submit", (event) => {
-    event.preventDefault();
-    const data = new FormData(event.target);
-    const name = data.get("term").trim();
-    const term = {
-      ...fallbackTerm(name),
-      temporary: false,
-      term: name,
-      slug: slugify(name),
-      category: data.get("category"),
-      one_liner: data.get("one_liner").trim(),
-      detailed_explanation: data.get("detailed_explanation").trim(),
-      tone: data.get("tone").trim()
-    };
-    saveCustomTerm(term);
-    alert("已发布词条。");
-    renderAdmin();
-  });
 }
 
 function route() {
@@ -840,10 +703,6 @@ function route() {
   }
   if (parts[0] === "category") {
     renderCategory(parts[1]);
-    return;
-  }
-  if (parts[0] === "admin") {
-    renderAdmin();
     return;
   }
   renderHome();
