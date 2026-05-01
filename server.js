@@ -4,7 +4,7 @@ const path = require("path");
 
 loadEnv();
 
-const { explainTerm, health, listCachedTerms, listTrendingTerms, refreshTrendingTerms } = require("./lib/memeService");
+const { explainTerm, health, listCachedTerms } = require("./lib/memeService");
 
 const root = __dirname;
 const port = Number(process.env.PORT || 8788);
@@ -30,27 +30,6 @@ const server = http.createServer(async (request, response) => {
       const terms = await listCachedTerms({
         category: url.searchParams.get("category") || "",
         limit: url.searchParams.get("limit") || 24
-      });
-      sendJson(response, 200, { terms });
-      return;
-    }
-
-    if (request.method === "GET" && request.url.startsWith("/api/trending-refresh")) {
-      const url = new URL(request.url, "http://localhost");
-      const secret = process.env.TRENDING_REFRESH_SECRET || "";
-      if (secret && url.searchParams.get("secret") !== secret) {
-        sendJson(response, 401, { error: "Unauthorized" });
-        return;
-      }
-      const terms = await refreshTrendingTerms();
-      sendJson(response, 200, { ok: true, count: terms.length, terms });
-      return;
-    }
-
-    if (request.method === "GET" && request.url.startsWith("/api/trending")) {
-      const url = new URL(request.url, "http://localhost");
-      const terms = await listTrendingTerms({
-        limit: url.searchParams.get("limit") || 12
       });
       sendJson(response, 200, { terms });
       return;

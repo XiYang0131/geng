@@ -159,7 +159,6 @@ const cacheKey = "meme_dictionary_cache_v1";
 const statsKey = "meme_dictionary_stats_v1";
 const app = document.querySelector("#app");
 let cloudTerms = [];
-let trendingTerms = [];
 
 function loadTerms() {
   const saved = JSON.parse(localStorage.getItem(storeKey) || "[]");
@@ -298,16 +297,6 @@ async function loadCloudTerms(category = "", limit = 24) {
   return true;
 }
 
-async function loadTrendingTerms(limit = 12) {
-  const response = await fetch(`/api/trending?limit=${limit}`);
-  if (!response.ok) {
-    return false;
-  }
-  const payload = await response.json().catch(() => ({}));
-  trendingTerms = Array.isArray(payload.terms) ? payload.terms : [];
-  return trendingTerms.length > 0;
-}
-
 async function requestAiTerm(query) {
   const response = await fetch("/api/explain", {
     method: "POST",
@@ -373,29 +362,6 @@ function renderHome(message = "", skipCloudRefresh = false) {
     </section>
     <section class="section">
       <div class="sectionHead">
-        <h2>正在流行</h2>
-        <p>来自外部热榜的候选梗词</p>
-      </div>
-      <div class="grid">
-        ${
-          trendingTerms
-            .slice(0, 6)
-            .map(
-              (term) => `
-                <button class="card trendCard" type="button" data-trend="${escapeHtml(term.term)}">
-                  <span class="rank">#${escapeHtml(term.rank || "")}</span>
-                  <h3>${escapeHtml(term.term)}</h3>
-                  <p>${escapeHtml(term.reason || "热榜候选，点击后生成解释。")}</p>
-                  ${cardMeta(term)}
-                </button>
-              `
-            )
-            .join("") || `<div class="card"><h3>等待刷新</h3><p>配置 Supabase 后访问刷新接口，就会出现全网热榜候选。</p></div>`
-        }
-      </div>
-    </section>
-    <section class="section">
-      <div class="sectionHead">
         <h2>分类入口</h2>
         <p>按语境继续查</p>
       </div>
@@ -418,14 +384,10 @@ function renderHome(message = "", skipCloudRefresh = false) {
     event.preventDefault();
     handleSearch(document.querySelector("#searchInput").value);
   });
-  document.querySelectorAll("[data-trend]").forEach((button) => {
-    button.addEventListener("click", () => handleSearch(button.dataset.trend));
-  });
-
   if (!skipCloudRefresh) {
-    Promise.all([loadCloudTerms("", 24), loadTrendingTerms(12)])
-      .then((results) => {
-        if (results.some(Boolean) && (location.hash || "#/") === "#/") {
+    loadCloudTerms("", 24)
+      .then((changed) => {
+        if (changed && (location.hash || "#/") === "#/") {
           renderHome(message, true);
         }
       })
