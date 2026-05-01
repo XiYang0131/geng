@@ -158,10 +158,11 @@ const storeKey = "meme_dictionary_terms_v1";
 const cacheKey = "meme_dictionary_cache_v1";
 const statsKey = "meme_dictionary_stats_v1";
 const app = document.querySelector("#app");
+let cloudTerms = [];
 
 function loadTerms() {
   const saved = JSON.parse(localStorage.getItem(storeKey) || "[]");
-  const bySlug = new Map([...seedTerms, ...saved].map((term) => [term.slug, term]));
+  const bySlug = new Map([...seedTerms, ...saved, ...cloudTerms].map((term) => [term.slug, term]));
   return [...bySlug.values()];
 }
 
@@ -259,6 +260,25 @@ function setCachedTerm(query, term) {
   localStorage.setItem(cacheKey, JSON.stringify(cache));
 }
 
+async function loadCloudTerms(category = "", limit = 24) {
+  const params = new URLSearchParams({ limit: String(limit) });
+  if (category) {
+    params.set("category", category);
+  }
+  const response = await fetch(`/api/terms?${params.toString()}`);
+  if (!response.ok) {
+    return false;
+  }
+  const payload = await response.json().catch(() => ({}));
+  const incoming = Array.isArray(payload.terms) ? payload.terms.map((term) => normalizeTerm(term, false)) : [];
+  if (!incoming.length) {
+    return false;
+  }
+  const bySlug = new Map([...cloudTerms, ...incoming].map((term) => [term.slug, term]));
+  cloudTerms = [...bySlug.values()];
+  return true;
+}
+
 async function requestAiTerm(query) {
   const response = await fetch("/api/explain", {
     method: "POST",
@@ -299,7 +319,7 @@ function setLoading(isLoading, label = "正在为你翻译...") {
   }
 }
 
-function renderHome(message = "") {
+function renderHome(message = "", skipCloudRefresh = false) {
   const terms = loadTerms();
   const hot = terms.slice(0, 8);
   app.innerHTML = `
@@ -345,6 +365,16 @@ function renderHome(message = "") {
     event.preventDefault();
     handleSearch(document.querySelector("#searchInput").value);
   });
+
+  if (!skipCloudRefresh) {
+    loadCloudTerms("", 24)
+      .then((changed) => {
+        if (changed && (location.hash || "#/") === "#/") {
+          renderHome(message, true);
+        }
+      })
+      .catch(() => {});
+  }
 }
 
 async function handleSearch(raw) {
@@ -539,7 +569,7 @@ async function copyText(text) {
   textarea.remove();
 }
 
-function renderCategory(id) {
+function renderCategory(id, skipCloudRefresh = false) {
   const category = categories.find((item) => item.id === id) || categories[0];
   const terms = loadTerms().filter((term) => term.category === category.id);
   document.title = `${category.name}梗大全 - 互联网梗词翻译器`;
@@ -571,6 +601,16 @@ function renderCategory(id) {
       </div>
     </section>
   `;
+
+  if (!skipCloudRefresh) {
+    loadCloudTerms(category.id, 24)
+      .then((changed) => {
+        if (changed && location.hash === `#/category/${category.id}`) {
+          renderCategory(category.id, true);
+        }
+      })
+      .catch(() => {});
+  }
 }
 
 function renderAdmin() {
@@ -725,7 +765,17 @@ function route() {
       renderTerm(term);
       return;
     }
-    renderHome("没有找到这个词条，可以直接搜索生成 AI 临时解释。");
+    loadCloudTerms("", 50)
+      .then(() => {
+        const cloudTerm = loadTerms().find((item) => item.slug === slug);
+        if (cloudTerm) {
+          renderTerm(cloudTerm);
+          return;
+        }
+        renderHome("没有找到这个词条，可以直接搜索生成 AI 临时解释。");
+      })
+      .catch(() => renderHome("没有找到这个词条，可以直接搜索生成 AI 临时解释。"));
+    app.innerHTML = `<section class="section"><p>正在加载词条...</p></section>`;
     return;
   }
   if (parts[0] === "category") {

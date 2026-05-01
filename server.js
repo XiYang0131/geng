@@ -4,7 +4,7 @@ const path = require("path");
 
 loadEnv();
 
-const { explainTerm, health } = require("./lib/memeService");
+const { explainTerm, health, listCachedTerms } = require("./lib/memeService");
 
 const root = __dirname;
 const port = Number(process.env.PORT || 8788);
@@ -22,6 +22,16 @@ const server = http.createServer(async (request, response) => {
   try {
     if (request.method === "GET" && request.url === "/api/health") {
       sendJson(response, 200, health());
+      return;
+    }
+
+    if (request.method === "GET" && request.url.startsWith("/api/terms")) {
+      const url = new URL(request.url, "http://localhost");
+      const terms = await listCachedTerms({
+        category: url.searchParams.get("category") || "",
+        limit: url.searchParams.get("limit") || 24
+      });
+      sendJson(response, 200, { terms });
       return;
     }
 
