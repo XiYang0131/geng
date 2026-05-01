@@ -1,6 +1,11 @@
 {
+  "name": "gengbaike",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
     "start": "node server.js"
   },
-  "dependencies": {}
+  "dependencies": {
+    "@supabase/supabase-js": "2.49.4"
+  }
 }

@@ -47,6 +47,7 @@ server.listen(port, () => {
   const status = health();
   console.log(`梗百科已启动：http://127.0.0.1:${port}`);
   console.log(status.llmConfigured ? `DeepSeek 已配置：${status.model}` : "DeepSeek 未配置：请设置 DEEPSEEK_API_KEY");
+  console.log(`缓存模式：${status.store}`);
 });
 
 function serveStatic(request, response) {

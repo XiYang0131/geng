@@ -4,12 +4,10 @@ module.exports = function handler(req, res) {
     return;
   }
 
-  res.status(200).json({
-    ok: true,
-    provider: "deepseek",
-    llmConfigured: Boolean(process.env.DEEPSEEK_API_KEY || process.env.OPENAI_API_KEY),
-    model: process.env.DEEPSEEK_MODEL || process.env.OPENAI_MODEL || "deepseek-v4-flash",
-    baseUrl: process.env.DEEPSEEK_BASE_URL || process.env.OPENAI_BASE_URL || "https://api.deepseek.com",
-    persistentStore: false
-  });
+  try {
+    const { health } = require("../lib/memeService");
+    res.status(200).json(health());
+  } catch (error) {
+    res.status(500).json({ error: error.message || "服务器开小差了，请重试。" });
+  }
 };
